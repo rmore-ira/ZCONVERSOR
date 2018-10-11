@@ -1,0 +1,283 @@
+REPORT zconversor.
+
+DATA: r_mil TYPE RANGE OF char9,
+      r_cem TYPE RANGE OF char04,
+      r_dez TYPE RANGE OF char04,
+      r_uni TYPE RANGE OF char04.
+
+DATA: s_mil LIKE LINE OF r_mil,
+      s_cem LIKE LINE OF r_cem,
+      s_dez LIKE LINE OF r_dez,
+      s_uni LIKE LINE OF r_uni.
+
+DATA: r_letras TYPE RANGE OF char01,
+      r_combin TYPE RANGE OF char02.
+
+DATA: s_letras LIKE LINE OF r_letras,
+      s_combin LIKE LINE OF r_combin.
+
+SELECTION-SCREEN BEGIN OF BLOCK b01.
+
+PARAMETERS: numero  TYPE c LENGTH 15,
+            arabico RADIOBUTTON GROUP r01,
+            romano  RADIOBUTTON GROUP r01.
+
+SELECTION-SCREEN:  END OF BLOCK b01.
+
+
+START-OF-SELECTION.
+
+
+  IF arabico EQ 'X'.
+
+    IF numero < 1
+      OR numero > 9999.
+
+      MESSAGE 'Digite um número entre 1 e 9999'
+              TYPE 'I' DISPLAY LIKE 'E'.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+
+    PERFORM zf_verif_arabico.
+    PERFORM zf_modif_arabico.
+
+  ELSEIF romano EQ 'X'.
+
+    PERFORM zf_verif_romano.
+    PERFORM zf_modif_romano.
+
+  ENDIF.
+*&---------------------------------------------------------------------*
+*&      Form  zf_verif_arabico
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM zf_verif_arabico .
+
+
+  s_mil = s_cem = s_dez = s_uni = 'IEQ'.
+
+  s_mil-low = 'M'. APPEND s_mil TO r_mil.
+  s_mil-low = 'MM'. APPEND s_mil TO r_mil.
+  s_mil-low = 'MMM'. APPEND s_mil TO r_mil.
+  s_mil-low = 'MMMM'. APPEND s_mil TO r_mil.
+  s_mil-low = 'MMMMM'. APPEND s_mil TO r_mil.
+  s_mil-low = 'MMMMMM'. APPEND s_mil TO r_mil.
+  s_mil-low = 'MMMMMMM'. APPEND s_mil TO r_mil.
+  s_mil-low = 'MMMMMMMM'. APPEND s_mil TO r_mil.
+  s_mil-low = 'MMMMMMMMM'. APPEND s_mil TO r_mil.
+
+  s_cem-low = 'C'. APPEND s_cem TO r_cem.
+  s_cem-low = 'CC'. APPEND s_cem TO r_cem.
+  s_cem-low = 'CCC'. APPEND s_cem TO r_cem.
+  s_cem-low = 'CD'. APPEND s_cem TO r_cem.
+  s_cem-low = 'D'. APPEND s_cem TO r_cem.
+  s_cem-low = 'DC'. APPEND s_cem TO r_cem.
+  s_cem-low = 'DCC'. APPEND s_cem TO r_cem.
+  s_cem-low = 'DCCC'. APPEND s_cem TO r_cem.
+  s_cem-low = 'CM'. APPEND s_cem TO r_cem.
+
+  s_dez-low = 'X'. APPEND s_dez TO r_dez.
+  s_dez-low = 'XX'. APPEND s_dez TO r_dez.
+  s_dez-low = 'XXX'. APPEND s_dez TO r_dez.
+  s_dez-low = 'XL'. APPEND s_dez TO r_dez.
+  s_dez-low = 'L'. APPEND s_dez TO r_dez.
+  s_dez-low = 'LX'. APPEND s_dez TO r_dez.
+  s_dez-low = 'LXX'. APPEND s_dez TO r_dez.
+  s_dez-low = 'LXXX'. APPEND s_dez TO r_dez.
+  s_dez-low = 'XC'. APPEND s_dez TO r_dez.
+
+  s_uni-low = 'I'. APPEND s_uni TO r_uni.
+  s_uni-low = 'II'. APPEND s_uni TO r_uni.
+  s_uni-low = 'III'. APPEND s_uni TO r_uni.
+  s_uni-low = 'IV'. APPEND s_uni TO r_uni.
+  s_uni-low = 'V'. APPEND s_uni TO r_uni.
+  s_uni-low = 'VI'. APPEND s_uni TO r_uni.
+  s_uni-low = 'VII'. APPEND s_uni TO r_uni.
+  s_uni-low = 'VIII'. APPEND s_uni TO r_uni.
+  s_uni-low = 'IX'. APPEND s_uni TO r_uni.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  zf_modif_arabico
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM zf_modif_arabico .
+  DATA: result  TYPE c LENGTH 15,
+        tamanho TYPE i,
+        index   TYPE i.
+
+  tamanho = strlen( numero ).
+
+  IF tamanho = 4.
+    index = numero(1).
+    IF index IS NOT INITIAL.
+      READ TABLE r_mil INTO s_mil INDEX index.
+      result = s_mil-low.
+    ENDIF.
+
+  ENDIF.
+
+  IF tamanho >= 3.
+    IF tamanho = 3.
+      index = numero(1).
+    ELSE.
+      index = numero+1(1).
+    ENDIF.
+    IF index IS NOT INITIAL.
+
+      READ TABLE r_cem INTO s_cem INDEX index.
+      CONCATENATE result s_cem-low INTO result.
+    ENDIF.
+  ENDIF.
+
+  IF tamanho >= 2.
+    IF tamanho = 2.
+      index = numero(1).
+    ELSEIF tamanho = 3.
+      index = numero+1(1).
+    ELSE.
+      index = numero+2(1).
+    ENDIF.
+    IF index IS NOT INITIAL.
+
+      READ TABLE r_dez INTO s_dez INDEX index.
+      CONCATENATE result s_dez-low INTO result.
+    ENDIF.
+  ENDIF.
+
+  IF tamanho >= 1.
+    IF tamanho = 1.
+      index = numero(1).
+    ELSEIF tamanho = 2.
+      index = numero+1(1).
+    ELSEIF tamanho = 3.
+      index = numero+2(1).
+    ELSE.
+      index = numero+3(1).
+    ENDIF.
+
+    IF index IS NOT INITIAL.
+
+      READ TABLE r_uni INTO s_uni INDEX index.
+      CONCATENATE result s_uni-low INTO result.
+    ENDIF.
+  ENDIF.
+
+  WRITE: result.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ZF_VERIF_ROMANO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM zf_verif_romano .
+  IF numero NA sy-abcde.
+    MESSAGE 'Apenas letras Romanas são válidas nessa função'
+            TYPE 'I' DISPLAY LIKE 'E'.
+    LEAVE LIST-PROCESSING.
+  ENDIF.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  ZF_MODIF_ROMANO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM zf_modif_romano .
+  DATA: result   TYPE i,
+        letra    TYPE c,
+        anterior TYPE c,
+        tamanho  TYPE i,
+        index    TYPE i,
+        ct       TYPE i.
+
+  tamanho = strlen( numero ).
+  CLEAR ct.
+  DO tamanho TIMES.
+
+    letra = numero+ct(1).
+
+    IF anterior IS INITIAL .
+
+      IF letra EQ 'M'.
+        ADD 1000 TO result.
+      ELSEIF letra EQ 'D'.
+        ADD 500 TO result.
+      ELSEIF letra EQ 'C'.
+        ADD 100 TO result.
+      ELSEIF letra EQ 'L'.
+        ADD 50 TO result.
+      ELSEIF letra EQ 'X'.
+        ADD 10 TO result.
+      ELSEIF letra EQ 'V'.
+        ADD 5 TO result.
+      ELSEIF letra EQ 'I'.
+        ADD 1 TO result.
+      ENDIF.
+    ELSE.
+
+      IF letra EQ 'M'.
+        IF anterior EQ 'C'.
+          ADD 800 TO result.
+        ELSE.
+          ADD 1000 TO result.
+        ENDIF.
+      ELSEIF letra EQ 'D'.
+        IF anterior EQ 'C'.
+          ADD 300 TO result.
+        ELSE.
+          ADD 500 TO result.
+        ENDIF.
+
+      ELSEIF letra EQ 'C'.
+        IF anterior EQ 'X'.
+          ADD 80 TO result.
+        ELSE.
+          ADD 100 TO result.
+        ENDIF.
+
+      ELSEIF letra EQ 'L'.
+        IF anterior EQ 'X'.
+          ADD 30 TO result.
+        ELSE.
+          ADD 50 TO result.
+        ENDIF.
+      ELSEIF letra EQ 'X'.
+        IF anterior EQ 'I'.
+
+          ADD 8 TO result.
+        ELSE.
+          ADD 10 TO result.
+        ENDIF.
+      ELSEIF letra EQ 'V'.
+        IF anterior EQ 'I'.
+          ADD 3 TO result.
+        ELSE.
+          ADD 5 TO result.
+        ENDIF.
+      ELSEIF letra EQ 'I'.
+        ADD 1 TO result.
+      ENDIF.
+
+    ENDIF.
+
+    anterior = letra.
+    ADD 1 TO ct.
+  ENDDO.
+  WRITE result.
+ENDFORM.
