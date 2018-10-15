@@ -1,6 +1,6 @@
 REPORT zconversor.
 
-DATA: r_mil TYPE RANGE OF char9,
+DATA: r_mil TYPE RANGE OF char04,
       r_cem TYPE RANGE OF char04,
       r_dez TYPE RANGE OF char04,
       r_uni TYPE RANGE OF char04.
@@ -29,11 +29,15 @@ START-OF-SELECTION.
 
 
   IF arabico EQ 'X'.
-
+    IF NUMERO NA '1234567890'.
+      MESSAGE 'Digite um número entre 1 e 3999'
+              TYPE 'I' DISPLAY LIKE 'E'.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
     IF numero < 1
-      OR numero > 9999.
+      OR numero > 3999.
 
-      MESSAGE 'Digite um número entre 1 e 9999'
+      MESSAGE 'Digite um número entre 1 e 3999'
               TYPE 'I' DISPLAY LIKE 'E'.
       LEAVE LIST-PROCESSING.
     ENDIF.
@@ -63,12 +67,6 @@ FORM zf_verif_arabico .
   s_mil-low = 'M'. APPEND s_mil TO r_mil.
   s_mil-low = 'MM'. APPEND s_mil TO r_mil.
   s_mil-low = 'MMM'. APPEND s_mil TO r_mil.
-  s_mil-low = 'MMMM'. APPEND s_mil TO r_mil.
-  s_mil-low = 'MMMMM'. APPEND s_mil TO r_mil.
-  s_mil-low = 'MMMMMM'. APPEND s_mil TO r_mil.
-  s_mil-low = 'MMMMMMM'. APPEND s_mil TO r_mil.
-  s_mil-low = 'MMMMMMMM'. APPEND s_mil TO r_mil.
-  s_mil-low = 'MMMMMMMMM'. APPEND s_mil TO r_mil.
 
   s_cem-low = 'C'. APPEND s_cem TO r_cem.
   s_cem-low = 'CC'. APPEND s_cem TO r_cem.
@@ -183,7 +181,7 @@ ENDFORM.
 *  <--  p2        text
 *----------------------------------------------------------------------*
 FORM zf_verif_romano .
-  IF numero NA sy-abcde.
+  IF numero NA 'MDCLXVI'.
     MESSAGE 'Apenas letras Romanas são válidas nessa função'
             TYPE 'I' DISPLAY LIKE 'E'.
     LEAVE LIST-PROCESSING.
@@ -234,41 +232,60 @@ FORM zf_modif_romano .
       IF letra EQ 'M'.
         IF anterior EQ 'C'.
           ADD 800 TO result.
-        ELSE.
+        ELSEif anterior eq 'M'.
           ADD 1000 TO result.
+        ELSE.
+          MESSAGE 'Número inválido' TYPE 'I' DISPLAY LIKE 'E'.
+          LEAVE LIST-PROCESSING.
         ENDIF.
       ELSEIF letra EQ 'D'.
         IF anterior EQ 'C'.
           ADD 300 TO result.
-        ELSE.
+        ELSEIF anterior eq 'M'.
           ADD 500 TO result.
+        ELSE.
+          MESSAGE 'Número inválido' TYPE 'I' DISPLAY LIKE 'E'.
+          LEAVE LIST-PROCESSING.
         ENDIF.
 
       ELSEIF letra EQ 'C'.
         IF anterior EQ 'X'.
           ADD 80 TO result.
-        ELSE.
+        ELSEIF ANTERIOR CA 'MDC'.
           ADD 100 TO result.
+        ELSE.
+          MESSAGE 'Número inválido' TYPE 'I' DISPLAY LIKE 'E'.
+          LEAVE LIST-PROCESSING.
         ENDIF.
 
       ELSEIF letra EQ 'L'.
         IF anterior EQ 'X'.
           ADD 30 TO result.
-        ELSE.
+        ELSEIF anterior ca 'MDC'.
           ADD 50 TO result.
+        ELSE.
+          MESSAGE 'Número inválido' TYPE 'I' DISPLAY LIKE 'E'.
+          LEAVE LIST-PROCESSING.
         ENDIF.
+
       ELSEIF letra EQ 'X'.
         IF anterior EQ 'I'.
-
           ADD 8 TO result.
-        ELSE.
+        ELSEIF ANTERIOR CA 'MDCLX'.
           ADD 10 TO result.
+        ELSE.
+          MESSAGE 'Número inválido' TYPE 'I' DISPLAY LIKE 'E'.
+          LEAVE LIST-PROCESSING.
         ENDIF.
+
       ELSEIF letra EQ 'V'.
         IF anterior EQ 'I'.
           ADD 3 TO result.
-        ELSE.
+        ELSEIF ANTERIOR CA 'MDCLX'.
           ADD 5 TO result.
+        ELSE.
+          MESSAGE 'Número inválido' TYPE 'I' DISPLAY LIKE 'E'.
+          LEAVE LIST-PROCESSING.
         ENDIF.
       ELSEIF letra EQ 'I'.
         ADD 1 TO result.
@@ -279,5 +296,10 @@ FORM zf_modif_romano .
     anterior = letra.
     ADD 1 TO ct.
   ENDDO.
-  WRITE result.
+  IF result < 3999.
+    WRITE result.
+  ELSE.
+    MESSAGE 'Número inválido' TYPE 'I' DISPLAY LIKE 'E'.
+  ENDIF.
+
 ENDFORM.
